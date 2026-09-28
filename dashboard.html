@@ -4,20 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f4f3ee" />
-  <title>Dashboard | Bookly</title>
+  <title>Dashboard | Book·it</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="toasts" aria-live="polite"></div>
   <div class="shell dash">
     <div class="topbar">
-      <div class="wordmark">book<span>ly</span></div>
+      <div class="wordmark">Book<span>·it</span></div>
       <button class="btn secondary" id="logout">Log out</button>
     </div>
 
     <h1 id="title"><span class="skel skel-line" style="width:220px;display:inline-block"></span></h1>
+
+    <div class="stats" id="stats">
+      <div class="stat"><span class="stat-num" id="stat-count">–</span><span class="stat-label">Bookings this week</span></div>
+      <div class="stat"><span class="stat-num" id="stat-rev">–</span><span class="stat-label">Revenue this week</span></div>
+    </div>
 
     <div class="linkbox">
       <code id="link"></code>
@@ -26,7 +33,7 @@
 
     <!-- BOOKINGS -->
     <section class="panel">
-      <h2>Upcoming bookings</h2>
+      <h2>Upcoming bookings <span class="live-dot" id="live-dot" title="Live updates on"></span></h2>
       <p class="sub" id="b-sub">New bookings show up here. Confirm them or cancel to free the time.</p>
       <div id="bookings"><div class="skel skel-block"></div><div class="skel skel-block"></div></div>
       <p class="msg" id="b-msg" role="alert"></p>
@@ -88,6 +95,7 @@
       if (error) return flash($("b-msg"), "Couldn't update this booking. Try again.");
       flash($("b-msg"), "");
       loadBookings();
+      loadStats();
     }
 
     async function loadBookings() {
@@ -297,10 +305,78 @@
       };
 
       loadBookings();
+      loadStats();
       loadServices();
       loadHours();
       setInterval(loadBookings, 30000);
+      goLive();
     })();
+
+    /* ---------- This week's stats ---------- */
+    function weekRange() {
+      const now = new Date();
+      const day = (now.getDay() + 6) % 7; // Monday = 0
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day);
+      const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
+      return [start, end];
+    }
+
+    async function loadStats() {
+      const [start, end] = weekRange();
+      const { data, error } = await db.from("bookings")
+        .select("status, services(price)")
+        .eq("vendor_id", vendorId)
+        .neq("status", "cancelled")
+        .gte("start_time", start.toISOString())
+        .lt("start_time", end.toISOString());
+      if (error) return;
+      const revenue = data.reduce((sum, b) => sum + Number(b.services ? b.services.price : 0), 0);
+      $("stat-count").textContent = data.length;
+      $("stat-rev").textContent = revenue.toLocaleString(undefined, { style: "currency", currency: "USD" });
+    }
+
+    /* ---------- Realtime: new bookings appear the instant they happen ---------- */
+    function playChime() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [880, 1320].forEach((freq, i) => {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.type = "sine"; o.frequency.value = freq;
+          o.connect(g); g.connect(ctx.destination);
+          const t = ctx.currentTime + i * 0.09;
+          g.gain.setValueAtTime(0, t);
+          g.gain.linearRampToValueAtTime(0.18, t + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          o.start(t); o.stop(t + 0.4);
+        });
+      } catch (_) { /* audio not available, silently skip */ }
+    }
+
+    function showToast(text) {
+      const t = document.createElement("div");
+      t.className = "toast";
+      t.textContent = text;
+      t.onclick = () => { $("bookings").scrollIntoView({ behavior: "smooth" }); t.remove(); };
+      $("toasts").append(t);
+      setTimeout(() => t.remove(), 6000);
+    }
+
+    function goLive() {
+      db.channel("bookings-" + vendorId)
+        .on("postgres_changes",
+          { event: "INSERT", schema: "public", table: "bookings", filter: `vendor_id=eq.${vendorId}` },
+          (payload) => {
+            showToast(`New booking from ${payload.new.customer_name}`);
+            playChime();
+            loadBookings();
+            loadStats();
+          }
+        )
+        .subscribe((status) => {
+          const dot = $("live-dot");
+          if (dot) dot.classList.toggle("on", status === "SUBSCRIBED");
+        });
+    }
 
     $("logout").onclick = async () => {
       await db.auth.signOut();

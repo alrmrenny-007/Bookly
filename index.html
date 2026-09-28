@@ -4,17 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f4f3ee" />
-  <title>Bookly: a booking page for your small business</title>
+  <title>Book·it: a booking page for your small business</title>
   <meta name="description" content="Get a free booking page for your barbershop, tutoring, or food business. Share one link and let customers pick a time." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="land">
     <nav class="nav">
-      <div class="wordmark">book<span>ly</span></div>
+      <div class="wordmark">Book<span>·it</span></div>
       <div class="links">
         <a href="#pricing">Pricing</a>
         <a href="login.html">Log in</a>
@@ -44,9 +45,9 @@
       </div>
     </header>
 
-    <section class="section">
+    <section class="section reveal">
       <h2>Small businesses still book by chat and notebook</h2>
-      <p class="lead">Every "are you free Friday?" message costs time, and a forgotten note means a double booking or a lost customer. Bookly replaces the back-and-forth with one link.</p>
+      <p class="lead">Every "are you free Friday?" message costs time, and a forgotten note means a double booking or a lost customer. Book·it replaces the back-and-forth with one link.</p>
       <div class="who">
         <div><b>Barbers and stylists</b><span>Fill the chair without answering messages mid-haircut.</span></div>
         <div><b>Tutors and coaches</b><span>Let students pick from your open hours.</span></div>
@@ -54,7 +55,7 @@
       </div>
     </section>
 
-    <section class="section">
+    <section class="section reveal">
       <h2>Live in about five minutes</h2>
       <ol class="steps">
         <li><div><b>Set up your page</b><span>Add your services with prices and durations, then choose your opening hours.</span></div></li>
@@ -63,7 +64,7 @@
       </ol>
     </section>
 
-    <section class="section" id="pricing">
+    <section class="section reveal" id="pricing">
       <h2>Free to start. Pay when you grow.</h2>
       <p class="lead">Most small vendors never need to pay. If your bookings take off, the upgrade costs less than one haircut.</p>
 
@@ -97,9 +98,16 @@
     </section>
 
     <footer>
-      <span class="wordmark" style="font-size:1.1rem">book<span>ly</span></span>
+      <span class="wordmark" style="font-size:1.1rem">Book<span>·it</span></span>
       <span>Built for the Next Founders Hackathon</span>
     </footer>
   </div>
+
+  <script>
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { threshold: 0.15 });
+    document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+  </script>
 </body>
 </html>
