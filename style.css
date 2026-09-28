@@ -160,3 +160,40 @@ input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px 
 .day input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--cobalt); }
 .day input[type="time"] { width: auto; padding: 8px 10px; }
 .day.off input[type="time"] { opacity: .35; pointer-events: none; }
+
+/* ---------- Public booking page ---------- */
+.book { max-width: 620px; margin: 0 auto; padding: 20px 20px 64px; }
+.book h1 { font-size: clamp(2rem, 7vw, 2.8rem); font-weight: 800; line-height: 1.05; }
+.book .about { color: var(--muted); margin-top: 8px; }
+.step { margin-top: 28px; }
+.step h2 { font-size: 1.15rem; font-weight: 800; margin-bottom: 10px; }
+
+.choices { display: grid; gap: 10px; }
+.choice {
+  text-align: left; font: inherit; cursor: pointer; width: 100%;
+  background: #fff; border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--ink);
+}
+.choice small { color: var(--muted); display: block; }
+.choice:hover { border-color: var(--ink); }
+.choice[aria-pressed="true"] { border-color: var(--cobalt); background: #eef0ff; box-shadow: 0 0 0 2px var(--cobalt) inset; }
+
+.dates { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
+.dates .choice { flex: 0 0 auto; width: auto; flex-direction: column; align-items: center; gap: 0; min-width: 76px; scroll-snap-align: start; text-align: center; }
+.dates .choice b { font-size: 1.3rem; font-family: "Bricolage Grotesque", sans-serif; }
+
+.times { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+.times .choice { justify-content: center; padding: 10px 0; font-weight: 600; }
+
+.ticket {
+  margin-top: 24px; background: #fff; border: 2px solid var(--ink); border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--butter);
+}
+.ticket .top { padding: 18px; }
+.ticket .top small { color: var(--muted); }
+.ticket .top strong { display: block; font-size: 1.3rem; font-family: "Bricolage Grotesque", sans-serif; }
+.ticket .perf { border-top: 2px dashed var(--ink); }
+.ticket .bottom { padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ticket .bottom b { font-size: 1.5rem; font-family: "Bricolage Grotesque", sans-serif; }
+.ticket .tag { background: var(--butter); border-radius: 99px; padding: 2px 12px; font-weight: 600; font-size: .9rem; }
+.footer-note { margin-top: 32px; text-align: center; color: var(--muted); font-size: .85rem; }

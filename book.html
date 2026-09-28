@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book an appointment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="book">
+    <h1 id="title">Loading…</h1>
+    <p class="about" id="about"></p>
+
+    <div id="flow" hidden>
+      <section class="step">
+        <h2>Choose a service</h2>
+        <div class="choices" id="services"></div>
+      </section>
+
+      <section class="step" id="date-step" hidden>
+        <h2>Pick a day</h2>
+        <div class="dates" id="dates"></div>
+      </section>
+
+      <section class="step" id="time-step" hidden>
+        <h2>Pick a time</h2>
+        <div class="times" id="times"></div>
+        <p class="msg" id="t-msg"></p>
+      </section>
+
+      <section class="step" id="form-step" hidden>
+        <h2>Your details</h2>
+        <form class="card" id="form" novalidate>
+          <label for="name">Your name</label>
+          <input id="name" autocomplete="name" placeholder="Alex" />
+          <label for="phone">Phone number</label>
+          <input id="phone" type="tel" autocomplete="tel" placeholder="So the business can reach you" />
+          <button class="btn" id="submit" type="submit">Book this time</button>
+          <p class="msg" id="msg" role="alert"></p>
+        </form>
+      </section>
+    </div>
+
+    <div id="done" hidden>
+      <div class="ticket">
+        <div class="top"><small id="d-biz"></small><strong id="d-service"></strong></div>
+        <div class="perf"></div>
+        <div class="bottom"><b id="d-when"></b><span class="tag">Waiting for confirmation</span></div>
+      </div>
+      <p class="about" style="margin-top:16px">Thanks! <span id="d-name"></span>, the business will confirm your booking soon. Take a screenshot of this ticket to keep the details.</p>
+      <button class="btn secondary" style="margin-top:16px" onclick="location.reload()">Make another booking</button>
+    </div>
+
+    <p class="footer-note">Booking page powered by Bookly</p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const DAYS_AHEAD = 14;
+    let vendor, services = [], availability = [];
+    let chosen = { service: null, date: null, slot: null };
+
+    const pad = (n) => String(n).padStart(2, "0");
+    const at = (date, hhmm) => {
+      const [h, m] = hhmm.split(":").map(Number);
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate(), h, m);
+    };
+    const fmtTime = (d) => d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const fmtDay = (d) => d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" });
+
+    function pick(container, btn) {
+      container.querySelectorAll(".choice").forEach((b) => b.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+    }
+
+    /* ---------- Load vendor ---------- */
+    async function init() {
+      const slug = new URLSearchParams(location.search).get("v");
+      if (!slug) return fail("This booking link is missing its business name.");
+
+      const { data: v } = await db.from("vendors").select("*").eq("slug", slug).maybeSingle();
+      if (!v) return fail("We couldn't find this business. Check the link and try again.");
+      vendor = v;
+      document.title = `Book ${v.business_name}`;
+      $("title").textContent = v.business_name;
+      $("about").textContent = v.description || "";
+
+      const [s, a] = await Promise.all([
+        db.from("services").select("*").eq("vendor_id", v.id).order("created_at"),
+        db.from("availability").select("*").eq("vendor_id", v.id),
+      ]);
+      services = s.data || [];
+      availability = a.data || [];
+
+      if (!services.length || !availability.length) {
+        return ($("about").textContent = "This business hasn't opened bookings yet. Check back soon.");
+      }
+      renderServices();
+      $("flow").hidden = false;
+    }
+
+    function fail(text) {
+      $("title").textContent = "Booking page not found";
+      $("about").textContent = text;
+    }
+
+    /* ---------- Step 1: services ---------- */
+    function renderServices() {
+      const box = $("services");
+      services.forEach((s) => {
+        const btn = document.createElement("button");
+        btn.className = "choice"; btn.type = "button"; btn.setAttribute("aria-pressed", "false");
+        const left = document.createElement("div");
+        const b = document.createElement("b"); b.textContent = s.name;
+        const sm = document.createElement("small"); sm.textContent = `${s.duration_min} min`;
+        left.append(b, sm);
+        const price = document.createElement("b"); price.textContent = Number(s.price);
+        btn.append(left, price);
+        btn.onclick = () => {
+          pick(box, btn);
+          chosen = { service: s, date: null, slot: null };
+          $("time-step").hidden = true; $("form-step").hidden = true;
+          renderDates();
+        };
+        box.append(btn);
+      });
+    }
+
+    /* ---------- Step 2: dates ---------- */
+    function renderDates() {
+      const box = $("dates");
+      box.replaceChildren();
+      const openDays = new Set(availability.map((r) => r.weekday));
+      const today = new Date();
+      for (let i = 0; i < DAYS_AHEAD; i++) {
+        const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+        if (!openDays.has(d.getDay())) continue;
+        const btn = document.createElement("button");
+        btn.className = "choice"; btn.type = "button"; btn.setAttribute("aria-pressed", "false");
+        const wd = document.createElement("small"); wd.textContent = d.toLocaleDateString([], { weekday: "short" });
+        const num = document.createElement("b"); num.textContent = d.getDate();
+        const mo = document.createElement("small"); mo.textContent = d.toLocaleDateString([], { month: "short" });
+        btn.append(wd, num, mo);
+        btn.onclick = () => { pick(box, btn); chosen.date = d; chosen.slot = null; $("form-step").hidden = true; renderTimes(); };
+        box.append(btn);
+      }
+      $("date-step").hidden = false;
+    }
+
+    /* ---------- Step 3: time slots ---------- */
+    async function renderTimes() {
+      const box = $("times");
+      box.replaceChildren();
+      $("t-msg").textContent = "";
+      $("time-step").hidden = false;
+
+      const dur = chosen.service.duration_min;
+      const dayStart = new Date(chosen.date.getFullYear(), chosen.date.getMonth(), chosen.date.getDate());
+      const dayEnd = new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate() + 1);
+
+      const { data: booked, error } = await db.rpc("get_booked_slots", {
+        p_vendor: vendor.id, p_from: dayStart.toISOString(), p_to: dayEnd.toISOString(),
+      });
+      if (error) { $("t-msg").textContent = "Couldn't load times. Refresh and try again."; return; }
+      const taken = (booked || []).map((b) => [new Date(b.start_time), new Date(b.end_time)]);
+
+      const now = new Date();
+      const slots = [];
+      availability.filter((r) => r.weekday === chosen.date.getDay()).forEach((r) => {
+        const close = at(chosen.date, r.end_time);
+        for (let t = at(chosen.date, r.start_time); t.getTime() + dur * 60000 <= close.getTime(); t = new Date(t.getTime() + dur * 60000)) {
+          const end = new Date(t.getTime() + dur * 60000);
+          const clash = taken.some(([bs, be]) => t < be && end > bs);
+          if (t > now && !clash) slots.push({ start: t, end });
+        }
+      });
+      slots.sort((a, b) => a.start - b.start);
+
+      if (!slots.length) {
+        $("t-msg").textContent = "No times left on this day. Try another day.";
+        return;
+      }
+      slots.forEach((s) => {
+        const btn = document.createElement("button");
+        btn.className = "choice"; btn.type = "button"; btn.setAttribute("aria-pressed", "false");
+        btn.textContent = fmtTime(s.start);
+        btn.onclick = () => { pick(box, btn); chosen.slot = s; $("form-step").hidden = false; $("form-step").scrollIntoView({ behavior: "smooth", block: "nearest" }); };
+        box.append(btn);
+      });
+    }
+
+    /* ---------- Step 4: book ---------- */
+    $("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = $("name").value.trim();
+      const phone = $("phone").value.trim();
+      const msg = $("msg"); msg.textContent = "";
+      if (!name) return (msg.textContent = "Enter your name.");
+      if (phone.replace(/\D/g, "").length < 6) return (msg.textContent = "Enter a phone number the business can reach.");
+      if (!chosen.slot) return (msg.textContent = "Pick a time first.");
+
+      $("submit").disabled = true;
+      // No .select() here: customers can insert bookings but not read them back.
+      const { error } = await db.from("bookings").insert({
+        vendor_id: vendor.id,
+        service_id: chosen.service.id,
+        customer_name: name,
+        customer_phone: phone,
+        start_time: chosen.slot.start.toISOString(),
+        end_time: chosen.slot.end.toISOString(),
+      });
+      $("submit").disabled = false;
+
+      if (error) {
+        if (error.code === "23P01") {
+          msg.textContent = "Someone just took that time. Pick another one.";
+          chosen.slot = null; $("form-step").hidden = true; renderTimes();
+        } else {
+          msg.textContent = "Couldn't complete your booking. Try again.";
+        }
+        return;
+      }
+
+      $("d-biz").textContent = vendor.business_name;
+      $("d-service").textContent = chosen.service.name;
+      $("d-when").textContent = `${fmtDay(chosen.slot.start)}, ${fmtTime(chosen.slot.start)}`;
+      $("d-name").textContent = name;
+      $("flow").hidden = true;
+      $("done").hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    init();
+  </script>
+</body>
+</html>
