@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard | Bookly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="shell dash">
+    <div class="topbar">
+      <div class="wordmark">book<span>ly</span></div>
+      <button class="btn secondary" id="logout">Log out</button>
+    </div>
+
+    <h1 id="title">Loading…</h1>
+
+    <div class="linkbox">
+      <code id="link"></code>
+      <button class="btn secondary" id="copy">Copy link</button>
+    </div>
+
+    <p class="empty">No bookings yet. Next we'll add your services and opening hours.</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script>
+    (async () => {
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) return (location.href = "index.html");
+
+      const { data: vendor, error } = await db
+        .from("vendors").select("*").eq("id", session.user.id).maybeSingle();
+
+      if (error || !vendor) {
+        document.getElementById("title").textContent = "We couldn't find your business profile.";
+        return;
+      }
+
+      document.getElementById("title").textContent = vendor.business_name;
+      const base = location.origin + location.pathname.replace(/[^/]*$/, "");
+      const url = `${base}book.html?v=${vendor.slug}`;
+      document.getElementById("link").textContent = url;
+
+      document.getElementById("copy").onclick = async (e) => {
+        await navigator.clipboard.writeText(url);
+        e.target.textContent = "Copied";
+        setTimeout(() => (e.target.textContent = "Copy link"), 1500);
+      };
+    })();
+
+    document.getElementById("logout").onclick = async () => {
+      await db.auth.signOut();
+      location.href = "index.html";
+    };
+  </script>
+</body>
+</html>
