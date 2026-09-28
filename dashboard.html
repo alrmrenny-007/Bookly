@@ -23,6 +23,14 @@
       <button class="btn secondary" id="copy">Copy link</button>
     </div>
 
+    <!-- BOOKINGS -->
+    <section class="panel">
+      <h2>Upcoming bookings</h2>
+      <p class="sub" id="b-sub">New bookings show up here. Confirm them or cancel to free the time.</p>
+      <div id="bookings"></div>
+      <p class="msg" id="b-msg" role="alert"></p>
+    </section>
+
     <!-- SERVICES -->
     <section class="panel">
       <h2>Services</h2>
@@ -52,7 +60,6 @@
       <p class="msg" id="h-msg" role="alert"></p>
     </section>
 
-    <p class="empty">Next: the public page where customers pick a time.</p>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -69,6 +76,91 @@
     function flash(el, text, ok = false) {
       el.textContent = text;
       el.className = "msg" + (ok ? " ok" : "");
+    }
+
+    /* ---------- Bookings ---------- */
+    const fmtDay = (d) => d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" });
+    const fmtTime = (d) => d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+    async function setStatus(id, status) {
+      const { error } = await db.from("bookings").update({ status }).eq("id", id);
+      if (error) return flash($("b-msg"), "Couldn't update this booking. Try again.");
+      flash($("b-msg"), "");
+      loadBookings();
+    }
+
+    async function loadBookings() {
+      const { data, error } = await db.from("bookings")
+        .select("*, services(name)")
+        .eq("vendor_id", vendorId)
+        .neq("status", "cancelled")
+        .gte("end_time", new Date().toISOString())
+        .order("start_time");
+      const box = $("bookings");
+      if (error) return flash($("b-msg"), "Couldn't load bookings. Refresh the page.");
+      box.replaceChildren();
+
+      if (!data.length) {
+        const p = document.createElement("p");
+        p.className = "empty";
+        p.textContent = "No bookings yet. Share your link to get your first one.";
+        box.append(p);
+        return;
+      }
+
+      const pending = data.filter((b) => b.status === "pending").length;
+      $("b-sub").textContent = pending
+        ? `${pending} waiting for your confirmation.`
+        : "You're all caught up.";
+
+      let lastDay = "";
+      data.forEach((b) => {
+        const start = new Date(b.start_time);
+        const day = fmtDay(start);
+        if (day !== lastDay) {
+          const h = document.createElement("h3");
+          h.className = "day-head"; h.textContent = day;
+          box.append(h);
+          lastDay = day;
+        }
+
+        const row = document.createElement("div");
+        row.className = "item booking";
+
+        const info = document.createElement("div");
+        const title = document.createElement("b");
+        title.textContent = `${fmtTime(start)}, ${b.services ? b.services.name : "Service"}`;
+        const small = document.createElement("small");
+        small.append(document.createTextNode(b.customer_name + " · "));
+        const tel = document.createElement("a");
+        tel.href = "tel:" + b.customer_phone.replace(/[^\d+]/g, "");
+        tel.textContent = b.customer_phone;
+        small.append(tel);
+        info.append(title, small);
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        const tag = document.createElement("span");
+        tag.className = "tag " + b.status;
+        tag.textContent = b.status === "confirmed" ? "Confirmed" : "Pending";
+        actions.append(tag);
+
+        if (b.status === "pending") {
+          const ok = document.createElement("button");
+          ok.className = "btn secondary"; ok.textContent = "Confirm";
+          ok.onclick = () => setStatus(b.id, "confirmed");
+          actions.append(ok);
+        }
+        const no = document.createElement("button");
+        no.className = "btn secondary danger"; no.textContent = "Cancel";
+        no.onclick = () => {
+          if (confirm(`Cancel ${b.customer_name}'s booking? This frees the time for other customers.`)) setStatus(b.id, "cancelled");
+        };
+        actions.append(no);
+
+        row.append(info, actions);
+        box.append(row);
+      });
     }
 
     /* ---------- Services ---------- */
@@ -203,8 +295,10 @@
         setTimeout(() => (e.target.textContent = "Copy link"), 1500);
       };
 
+      loadBookings();
       loadServices();
       loadHours();
+      setInterval(loadBookings, 30000);
     })();
 
     $("logout").onclick = async () => {
