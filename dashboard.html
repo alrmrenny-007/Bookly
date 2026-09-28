@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4f3ee" />
   <title>Dashboard | Bookly</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,7 +17,7 @@
       <button class="btn secondary" id="logout">Log out</button>
     </div>
 
-    <h1 id="title">Loading…</h1>
+    <h1 id="title"><span class="skel skel-line" style="width:220px;display:inline-block"></span></h1>
 
     <div class="linkbox">
       <code id="link"></code>
@@ -27,7 +28,7 @@
     <section class="panel">
       <h2>Upcoming bookings</h2>
       <p class="sub" id="b-sub">New bookings show up here. Confirm them or cancel to free the time.</p>
-      <div id="bookings"></div>
+      <div id="bookings"><div class="skel skel-block"></div><div class="skel skel-block"></div></div>
       <p class="msg" id="b-msg" role="alert"></p>
     </section>
 
@@ -35,7 +36,7 @@
     <section class="panel">
       <h2>Services</h2>
       <p class="sub">What customers can book, and how long each one takes.</p>
-      <div class="list" id="services"></div>
+      <div class="list" id="services"><div class="skel skel-block"></div></div>
 
       <form class="card" id="service-form" novalidate>
         <div class="row3">
@@ -275,7 +276,7 @@
     /* ---------- Init ---------- */
     (async () => {
       const { data: { session } } = await db.auth.getSession();
-      if (!session) return (location.href = "index.html");
+      if (!session) return (location.href = "login.html");
 
       const { data: vendor, error } = await db
         .from("vendors").select("*").eq("id", session.user.id).maybeSingle();

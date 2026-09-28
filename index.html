@@ -2,154 +2,104 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bookly: booking pages for local vendors</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4f3ee" />
+  <title>Bookly: a booking page for your small business</title>
+  <meta name="description" content="Get a free booking page for your barbershop, tutoring, or food business. Share one link and let customers pick a time." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="shell">
-    <header><div class="wordmark">book<span>ly</span></div></header>
+  <div class="land">
+    <nav class="nav">
+      <div class="wordmark">book<span>ly</span></div>
+      <div class="links">
+        <a href="#pricing">Pricing</a>
+        <a href="login.html">Log in</a>
+        <a class="btn-a" href="login.html">Get started</a>
+      </div>
+    </nav>
 
-    <main class="split">
-      <section class="intro">
+    <header class="hero">
+      <div>
         <h1>Let customers book you. Skip the DMs.</h1>
-        <p>Get a free booking page for your barbershop, tutoring, or food business. Share one link and let customers pick a time.</p>
-
-        <div class="slip" aria-hidden="true">
-          <div class="slip-top">
-            <small>Joe's Barbershop</small>
-            <strong>Fade + beard trim</strong>
-          </div>
-          <div class="slip-perf"></div>
-          <div class="slip-bottom">
-            <b>Fri 10:30</b>
-            <span class="slip-tag">Confirmed</span>
-          </div>
+        <p>A free booking page for barbers, tutors, and home food sellers. Share one link, and customers pick a time that's actually free.</p>
+        <div class="cta">
+          <a class="btn-a" href="login.html">Create your free page</a>
+          <a class="btn-a ghost" href="#pricing">See pricing</a>
         </div>
-      </section>
+      </div>
+      <div class="slip" aria-hidden="true">
+        <div class="slip-top">
+          <small>Joe's Barbershop</small>
+          <strong>Fade + beard trim</strong>
+        </div>
+        <div class="slip-perf"></div>
+        <div class="slip-bottom">
+          <b>Fri 10:30</b>
+          <span class="slip-tag">Confirmed</span>
+        </div>
+      </div>
+    </header>
 
-      <section class="card" aria-label="Sign in or create account">
-        <div class="tabs" role="tablist">
-          <button role="tab" id="tab-signup" aria-selected="true">Create account</button>
-          <button role="tab" id="tab-login" aria-selected="false">Log in</button>
+    <section class="section">
+      <h2>Small businesses still book by chat and notebook</h2>
+      <p class="lead">Every "are you free Friday?" message costs time, and a forgotten note means a double booking or a lost customer. Bookly replaces the back-and-forth with one link.</p>
+      <div class="who">
+        <div><b>Barbers and stylists</b><span>Fill the chair without answering messages mid-haircut.</span></div>
+        <div><b>Tutors and coaches</b><span>Let students pick from your open hours.</span></div>
+        <div><b>Home cooks and market stalls</b><span>Take pickup slots and orders without a website.</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Live in about five minutes</h2>
+      <ol class="steps">
+        <li><div><b>Set up your page</b><span>Add your services with prices and durations, then choose your opening hours.</span></div></li>
+        <li><div><b>Share your link</b><span>Put it in your Instagram bio, WhatsApp status, or on a printed card.</span></div></li>
+        <li><div><b>Customers book, you confirm</b><span>Taken times disappear automatically, so double bookings can't happen.</span></div></li>
+      </ol>
+    </section>
+
+    <section class="section" id="pricing">
+      <h2>Free to start. Pay when you grow.</h2>
+      <p class="lead">Most small vendors never need to pay. If your bookings take off, the upgrade costs less than one haircut.</p>
+
+      <div class="plans">
+        <div class="plan">
+          <h3>Free</h3>
+          <div class="price">$0<small> /month</small></div>
+          <ul>
+            <li>Your own booking link</li>
+            <li>Up to 20 bookings a month</li>
+            <li>Services, hours, and a bookings dashboard</li>
+            <li>Double-booking protection</li>
+          </ul>
+          <a class="btn-a ghost" href="login.html">Start free</a>
         </div>
 
-        <form id="form" novalidate>
-          <div id="signup-only">
-            <label for="business">Business name</label>
-            <input id="business" type="text" autocomplete="organization" placeholder="Joe's Barbershop" />
+        <div class="plan pro">
+          <h3>Pro</h3>
+          <div class="price">$8<small> /month</small></div>
+          <ul>
+            <li>Unlimited bookings</li>
+            <li>SMS reminders to cut no-shows <em>Coming soon</em></li>
+            <li>Online payments and deposits <em>Coming soon</em></li>
+            <li>Custom booking link <em>Coming soon</em></li>
+          </ul>
+          <a class="btn-a" href="login.html">Start free, upgrade later</a>
+        </div>
+      </div>
 
-            <label for="slug">Your booking link</label>
-            <input id="slug" type="text" autocomplete="off" placeholder="joes-barbershop" />
-            <p class="hint" id="link-preview"></p>
-          </div>
+      <p class="pricing-note">Why $8? A single no-show costs a barber more than that. Reminders and deposits are designed to pay for themselves by preventing lost appointments.</p>
+    </section>
 
-          <label for="email">Email</label>
-          <input id="email" type="email" autocomplete="email" placeholder="you@example.com" />
-
-          <label for="password">Password</label>
-          <input id="password" type="password" autocomplete="new-password" placeholder="At least 6 characters" />
-
-          <button class="btn" id="submit" type="submit">Create account</button>
-          <p class="msg" id="msg" role="alert"></p>
-        </form>
-      </section>
-    </main>
+    <footer>
+      <span class="wordmark" style="font-size:1.1rem">book<span>ly</span></span>
+      <span>Built for the Next Founders Hackathon</span>
+    </footer>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
-  <script>
-    let mode = "signup";
-    let slugEdited = false;
-
-    const $ = (id) => document.getElementById(id);
-    const msg = (text, ok = false) => {
-      $("msg").textContent = text;
-      $("msg").className = "msg" + (ok ? " ok" : "");
-    };
-
-    // If already logged in, go straight to the dashboard
-    db.auth.getSession().then(({ data }) => {
-      if (data.session) location.href = "dashboard.html";
-    });
-
-    function setMode(next) {
-      mode = next;
-      const signup = mode === "signup";
-      $("tab-signup").setAttribute("aria-selected", signup);
-      $("tab-login").setAttribute("aria-selected", !signup);
-      $("signup-only").hidden = !signup;
-      $("submit").textContent = signup ? "Create account" : "Log in";
-      $("password").autocomplete = signup ? "new-password" : "current-password";
-      msg("");
-    }
-    $("tab-signup").onclick = () => setMode("signup");
-    $("tab-login").onclick = () => setMode("login");
-
-    // Auto-fill the link from the business name until the user edits it
-    function updatePreview() {
-      const s = $("slug").value;
-      $("link-preview").textContent = s ? `${location.origin}${location.pathname.replace(/[^/]*$/, "")}book.html?v=${s}` : "";
-    }
-    $("business").addEventListener("input", () => {
-      if (!slugEdited) $("slug").value = slugify($("business").value);
-      updatePreview();
-    });
-    $("slug").addEventListener("input", () => {
-      slugEdited = true;
-      $("slug").value = slugify($("slug").value);
-      updatePreview();
-    });
-
-    $("form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      msg("");
-      const email = $("email").value.trim();
-      const password = $("password").value;
-
-      if (!email || !password) return msg("Enter your email and password.");
-
-      $("submit").disabled = true;
-      try {
-        if (mode === "login") {
-          const { error } = await db.auth.signInWithPassword({ email, password });
-          if (error) throw error;
-          location.href = "dashboard.html";
-          return;
-        }
-
-        const business = $("business").value.trim();
-        const slug = $("slug").value.trim();
-        if (!business) throw new Error("Enter your business name.");
-        if (!slug) throw new Error("Choose a booking link.");
-        if (password.length < 6) throw new Error("Password must be at least 6 characters.");
-
-        // Check the link is free
-        const { data: taken } = await db.from("vendors").select("id").eq("slug", slug).maybeSingle();
-        if (taken) throw new Error("That booking link is taken. Try another one.");
-
-        const { data, error } = await db.auth.signUp({ email, password });
-        if (error) throw error;
-        if (!data.session) {
-          throw new Error("Email confirmation is on. Turn it off in Supabase > Authentication > Providers > Email, then try again.");
-        }
-
-        const { error: vErr } = await db
-          .from("vendors")
-          .insert({ id: data.user.id, business_name: business, slug });
-        if (vErr) throw vErr;
-
-        location.href = "dashboard.html";
-      } catch (err) {
-        msg(err.message || "Something went wrong. Try again.");
-      } finally {
-        $("submit").disabled = false;
-      }
-    });
-  </script>
 </body>
 </html>

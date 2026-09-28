@@ -10,7 +10,9 @@
   --radius: 14px;
 }
 
-* { box-sizing: border-box; margin: 0; }
+* { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+
+html { scroll-behavior: smooth; }
 
 body {
   font-family: "DM Sans", system-ui, sans-serif;
@@ -18,7 +20,21 @@ body {
   color: var(--ink);
   line-height: 1.5;
   min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* iOS zooms in on any input under 16px; keep all inputs at 16px+ */
+input, select, textarea, button { font-size: 16px; }
+
+/* Real tap feedback for touch screens, since :hover doesn't fire there */
+button, .choice, a.btn-a {
+  -webkit-user-select: none; user-select: none;
+  transition: transform .08s ease, background-color .15s ease, border-color .15s ease;
+}
+button:active, .choice:active, a.btn-a:active { transform: scale(0.97); }
+
+/* Every tappable control should be comfortably thumb-sized */
+.choice, .btn, .btn-a, .tabs button { min-height: 44px; }
 
 h1, h2, h3, .wordmark {
   font-family: "Bricolage Grotesque", "DM Sans", sans-serif;
@@ -117,6 +133,13 @@ input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px 
 
 [hidden] { display: none !important; }
 
+/* Loading skeleton, used while data is fetched */
+.skel { background: linear-gradient(90deg, var(--line) 25%, #ece9dd 37%, var(--line) 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; border-radius: 8px; }
+.skel-line { height: 14px; margin: 6px 0; }
+.skel-block { height: 56px; border-radius: 12px; margin-bottom: 10px; }
+@keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+
 /* ---------- Dashboard ---------- */
 .topbar {
   display: flex; justify-content: space-between; align-items: center;
@@ -153,13 +176,17 @@ input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px 
 
 .hours { display: grid; gap: 8px; }
 .day {
-  display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px;
-  background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px;
+  display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
 }
 .day label { margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 600; }
-.day input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--cobalt); }
-.day input[type="time"] { width: auto; padding: 8px 10px; }
+.day input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--cobalt); flex-shrink: 0; }
+.day input[type="time"] { width: auto; padding: 8px 6px; min-width: 0; }
 .day.off input[type="time"] { opacity: .35; pointer-events: none; }
+@media (max-width: 380px) {
+  .day { grid-template-columns: 1fr; }
+  .day > input[type="time"] { justify-self: stretch; }
+}
 
 /* ---------- Public booking page ---------- */
 .book { max-width: 620px; margin: 0 auto; padding: 20px 20px 64px; }
@@ -178,8 +205,12 @@ input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px 
 .choice:hover { border-color: var(--ink); }
 .choice[aria-pressed="true"] { border-color: var(--cobalt); background: #eef0ff; box-shadow: 0 0 0 2px var(--cobalt) inset; }
 
-.dates { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
-.dates .choice { flex: 0 0 auto; width: auto; flex-direction: column; align-items: center; gap: 0; min-width: 76px; scroll-snap-align: start; text-align: center; }
+.dates {
+  display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 10px;
+  scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.dates .choice { flex: 0 0 auto; width: auto; flex-direction: column; align-items: center; gap: 0; min-width: 76px; min-height: 76px; justify-content: center; scroll-snap-align: start; text-align: center; }
 .dates .choice b { font-size: 1.3rem; font-family: "Bricolage Grotesque", sans-serif; }
 
 .times { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
@@ -206,3 +237,67 @@ input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px 
 .tag { border-radius: 99px; padding: 2px 10px; font-size: .82rem; font-weight: 600; }
 .tag.pending { background: var(--butter); }
 .tag.confirmed { background: #c9f0d6; color: #14532d; }
+
+/* ---------- Landing page ---------- */
+.land { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+.nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; gap: 10px; }
+.nav .links { display: flex; gap: 14px; align-items: center; }
+.nav a { color: var(--ink); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.nav a:hover { color: var(--cobalt); }
+@media (max-width: 420px) {
+  .nav .links a:not(.btn-a) { display: none; } /* keep just Get started on very small screens */
+  .nav a.btn-a { padding: 10px 14px; font-size: .92rem; }
+}
+
+.btn-a {
+  display: inline-block; padding: 14px 22px; border-radius: 10px; font-weight: 700; text-decoration: none;
+  background: var(--cobalt); color: #fff; border: 2px solid var(--cobalt);
+}
+.btn-a:hover { background: var(--cobalt-dark); border-color: var(--cobalt-dark); color: #fff; }
+.btn-a.ghost { background: transparent; color: var(--ink); border-color: var(--ink); }
+.btn-a.ghost:hover { background: var(--ink); color: #fff; }
+.nav a.btn-a { color: #fff; padding: 8px 16px; }
+
+.hero { display: grid; gap: 40px; padding: 32px 0 64px; }
+@media (min-width: 860px) { .hero { grid-template-columns: 1.2fr 1fr; align-items: center; padding: 56px 0 88px; } }
+.hero h1 { font-size: clamp(2.6rem, 8vw, 4.6rem); line-height: 1; font-weight: 800; max-width: 11ch; }
+.hero p { margin-top: 18px; font-size: 1.15rem; color: var(--muted); max-width: 38ch; }
+.hero .cta { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; }
+.hero .slip { display: block; margin: 0 auto; max-width: 360px; width: 100%; }
+
+.section { padding: 56px 0; border-top: 1px solid var(--line); }
+.section > h2 { font-size: clamp(1.7rem, 5vw, 2.4rem); font-weight: 800; max-width: 20ch; line-height: 1.1; }
+.section > .lead { margin-top: 12px; color: var(--muted); max-width: 52ch; }
+
+.who { margin-top: 28px; display: grid; gap: 14px; }
+@media (min-width: 720px) { .who { grid-template-columns: repeat(3, 1fr); } }
+.who div { padding-left: 14px; border-left: 4px solid var(--butter); }
+.who b { display: block; font-family: "Bricolage Grotesque", sans-serif; font-size: 1.15rem; }
+.who span { color: var(--muted); }
+
+.steps { margin: 28px 0 0; padding: 0; list-style: none; display: grid; gap: 18px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start; }
+.steps li::before {
+  content: counter(s); width: 44px; height: 44px; border-radius: 50%; background: var(--ink); color: var(--butter);
+  display: grid; place-items: center; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 1.2rem;
+}
+.steps b { display: block; font-size: 1.05rem; }
+.steps span { color: var(--muted); }
+
+.plans { margin-top: 28px; display: grid; gap: 18px; }
+@media (min-width: 720px) { .plans { grid-template-columns: 1fr 1fr; align-items: stretch; } }
+.plan { border-radius: var(--radius); padding: 26px; border: 1.5px solid var(--ink); background: #fff; display: flex; flex-direction: column; }
+.plan h3 { font-size: 1.3rem; font-weight: 800; }
+.plan .price { font-family: "Bricolage Grotesque", sans-serif; font-size: 3rem; font-weight: 800; line-height: 1.1; margin: 8px 0; }
+.plan .price small { font-size: 1rem; font-weight: 500; font-family: "DM Sans", sans-serif; opacity: .7; }
+.plan ul { list-style: none; padding: 0; margin: 14px 0 24px; display: grid; gap: 10px; flex: 1; }
+.plan li { padding-left: 24px; position: relative; }
+.plan li::before { content: "✓"; position: absolute; left: 0; font-weight: 800; color: var(--cobalt); }
+.plan li em { font-style: normal; font-size: .8rem; font-weight: 700; background: var(--butter); color: var(--ink); border-radius: 99px; padding: 1px 8px; margin-left: 6px; }
+.plan.pro { background: var(--ink); color: #fff; box-shadow: 8px 8px 0 var(--butter); }
+.plan.pro li::before { color: var(--butter); }
+.plan.pro .btn-a { background: var(--butter); border-color: var(--butter); color: var(--ink); text-align: center; }
+.plan .btn-a { text-align: center; }
+.pricing-note { margin-top: 18px; color: var(--muted); font-size: .95rem; max-width: 60ch; }
+
+.land footer { padding: 32px 0 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
