@@ -23,37 +23,191 @@
       <button class="btn secondary" id="copy">Copy link</button>
     </div>
 
-    <p class="empty">No bookings yet. Next we'll add your services and opening hours.</p>
+    <!-- SERVICES -->
+    <section class="panel">
+      <h2>Services</h2>
+      <p class="sub">What customers can book, and how long each one takes.</p>
+      <div class="list" id="services"></div>
+
+      <form class="card" id="service-form" novalidate>
+        <div class="row3">
+          <div><label for="s-name">Service name</label>
+            <input id="s-name" placeholder="Haircut" /></div>
+          <div><label for="s-price">Price</label>
+            <input id="s-price" type="number" min="0" step="0.01" placeholder="15" /></div>
+          <div><label for="s-dur">Minutes</label>
+            <input id="s-dur" type="number" min="5" step="5" placeholder="30" /></div>
+        </div>
+        <button class="btn inline" type="submit">Add service</button>
+        <p class="msg" id="s-msg" role="alert"></p>
+      </form>
+    </section>
+
+    <!-- HOURS -->
+    <section class="panel">
+      <h2>Opening hours</h2>
+      <p class="sub">Customers can only book inside these times.</p>
+      <div class="hours" id="hours"></div>
+      <button class="btn inline" id="save-hours">Save hours</button>
+      <p class="msg" id="h-msg" role="alert"></p>
+    </section>
+
+    <p class="empty">Next: the public page where customers pick a time.</p>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script>
+    const $ = (id) => document.getElementById(id);
+    const DAYS = [
+      { n: 1, name: "Monday" }, { n: 2, name: "Tuesday" }, { n: 3, name: "Wednesday" },
+      { n: 4, name: "Thursday" }, { n: 5, name: "Friday" }, { n: 6, name: "Saturday" },
+      { n: 0, name: "Sunday" },
+    ];
+    let vendorId = null;
+
+    function flash(el, text, ok = false) {
+      el.textContent = text;
+      el.className = "msg" + (ok ? " ok" : "");
+    }
+
+    /* ---------- Services ---------- */
+    async function loadServices() {
+      const { data, error } = await db.from("services").select("*")
+        .eq("vendor_id", vendorId).order("created_at");
+      const box = $("services");
+      box.replaceChildren();
+      if (error) return flash($("s-msg"), "Couldn't load services. Refresh the page.");
+      if (!data.length) {
+        const p = document.createElement("p");
+        p.className = "empty";
+        p.textContent = "No services yet. Add your first one below.";
+        box.append(p);
+        return;
+      }
+      data.forEach((s) => {
+        const row = document.createElement("div");
+        row.className = "item";
+        const info = document.createElement("div");
+        const b = document.createElement("b"); b.textContent = s.name;
+        const small = document.createElement("small");
+        small.textContent = `${s.duration_min} min · ${Number(s.price)}`;
+        info.append(b, small);
+        const del = document.createElement("button");
+        del.className = "btn secondary danger"; del.textContent = "Delete";
+        del.onclick = async () => {
+          if (!confirm(`Delete "${s.name}"? Its bookings will be deleted too.`)) return;
+          const { error } = await db.from("services").delete().eq("id", s.id);
+          if (error) return flash($("s-msg"), "Couldn't delete this service.");
+          loadServices();
+        };
+        row.append(info, del);
+        box.append(row);
+      });
+    }
+
+    $("service-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = $("s-name").value.trim();
+      const price = parseFloat($("s-price").value || "0");
+      const dur = parseInt($("s-dur").value, 10);
+      if (!name) return flash($("s-msg"), "Enter a service name.");
+      if (!dur || dur < 5) return flash($("s-msg"), "Enter how many minutes it takes (at least 5).");
+      if (price < 0) return flash($("s-msg"), "Price can't be negative.");
+      const { error } = await db.from("services")
+        .insert({ vendor_id: vendorId, name, price, duration_min: dur });
+      if (error) return flash($("s-msg"), "Couldn't save this service. Try again.");
+      e.target.reset();
+      flash($("s-msg"), "Service added.", true);
+      loadServices();
+    });
+
+    /* ---------- Opening hours ---------- */
+    function buildHours(saved) {
+      const box = $("hours");
+      box.replaceChildren();
+      DAYS.forEach((d) => {
+        const s = saved.find((r) => r.weekday === d.n);
+        const row = document.createElement("div");
+        row.className = "day" + (s ? "" : " off");
+        row.dataset.day = d.n;
+
+        const label = document.createElement("label");
+        const cb = document.createElement("input");
+        cb.type = "checkbox"; cb.checked = !!s;
+        label.append(cb, document.createTextNode(d.name));
+
+        const start = document.createElement("input");
+        start.type = "time"; start.value = s ? s.start_time.slice(0, 5) : "09:00";
+        start.setAttribute("aria-label", `${d.name} opens`);
+        const end = document.createElement("input");
+        end.type = "time"; end.value = s ? s.end_time.slice(0, 5) : "17:00";
+        end.setAttribute("aria-label", `${d.name} closes`);
+
+        cb.onchange = () => row.classList.toggle("off", !cb.checked);
+        row.append(label, start, end);
+        box.append(row);
+      });
+    }
+
+    async function loadHours() {
+      const { data, error } = await db.from("availability").select("*").eq("vendor_id", vendorId);
+      if (error) flash($("h-msg"), "Couldn't load your hours. Refresh the page.");
+      buildHours(data || []);
+    }
+
+    $("save-hours").onclick = async () => {
+      const rows = [];
+      for (const row of $("hours").children) {
+        const [cb, start, end] = [
+          row.querySelector('input[type="checkbox"]'),
+          ...row.querySelectorAll('input[type="time"]'),
+        ];
+        if (!cb.checked) continue;
+        if (!start.value || !end.value || end.value <= start.value) {
+          return flash($("h-msg"), `${row.querySelector("label").textContent}: closing time must be after opening time.`);
+        }
+        rows.push({ vendor_id: vendorId, weekday: +row.dataset.day, start_time: start.value, end_time: end.value });
+      }
+      $("save-hours").disabled = true;
+      const del = await db.from("availability").delete().eq("vendor_id", vendorId);
+      if (del.error) { $("save-hours").disabled = false; return flash($("h-msg"), "Couldn't save your hours. Try again."); }
+      if (rows.length) {
+        const ins = await db.from("availability").insert(rows);
+        if (ins.error) { $("save-hours").disabled = false; return flash($("h-msg"), "Couldn't save your hours. Try again."); }
+      }
+      $("save-hours").disabled = false;
+      flash($("h-msg"), "Hours saved.", true);
+    };
+
+    /* ---------- Init ---------- */
     (async () => {
       const { data: { session } } = await db.auth.getSession();
       if (!session) return (location.href = "index.html");
 
       const { data: vendor, error } = await db
         .from("vendors").select("*").eq("id", session.user.id).maybeSingle();
-
       if (error || !vendor) {
-        document.getElementById("title").textContent = "We couldn't find your business profile.";
+        $("title").textContent = "We couldn't find your business profile.";
         return;
       }
+      vendorId = vendor.id;
+      $("title").textContent = vendor.business_name;
 
-      document.getElementById("title").textContent = vendor.business_name;
       const base = location.origin + location.pathname.replace(/[^/]*$/, "");
       const url = `${base}book.html?v=${vendor.slug}`;
-      document.getElementById("link").textContent = url;
-
-      document.getElementById("copy").onclick = async (e) => {
+      $("link").textContent = url;
+      $("copy").onclick = async (e) => {
         await navigator.clipboard.writeText(url);
         e.target.textContent = "Copied";
         setTimeout(() => (e.target.textContent = "Copy link"), 1500);
       };
+
+      loadServices();
+      loadHours();
     })();
 
-    document.getElementById("logout").onclick = async () => {
+    $("logout").onclick = async () => {
       await db.auth.signOut();
       location.href = "index.html";
     };

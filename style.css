@@ -131,3 +131,32 @@ input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px 
 .empty { margin-top: 24px; color: var(--muted); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- Dashboard sections ---------- */
+.panel { margin-top: 28px; }
+.panel h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+.panel .sub { color: var(--muted); font-size: .95rem; margin-bottom: 14px; }
+
+.list { display: grid; gap: 10px; margin-bottom: 16px; }
+.item {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+}
+.item b { display: block; }
+.item small { color: var(--muted); }
+.btn.danger { color: var(--error); border-color: var(--error); }
+.btn.danger:hover { background: var(--error); color: #fff; }
+
+.row3 { display: grid; grid-template-columns: 1fr; gap: 0 12px; }
+@media (min-width: 600px) { .row3 { grid-template-columns: 2fr 1fr 1fr; } }
+.btn.inline { width: auto; padding: 12px 20px; margin-top: 16px; }
+
+.hours { display: grid; gap: 8px; }
+.day {
+  display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px;
+}
+.day label { margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.day input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--cobalt); }
+.day input[type="time"] { width: auto; padding: 8px 10px; }
+.day.off input[type="time"] { opacity: .35; pointer-events: none; }
