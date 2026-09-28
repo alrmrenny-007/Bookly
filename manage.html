@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4f3ee" />
+  <title>Manage your booking | Book·it</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="book">
+    <h1 id="title"><span class="skel skel-line" style="width:70%;height:1.6em;display:inline-block"></span></h1>
+
+    <div id="content" hidden>
+      <div class="ticket">
+        <div class="top"><small id="biz"></small><strong id="service"></strong></div>
+        <div class="perf"></div>
+        <div class="bottom"><b id="when"></b><span class="tag" id="status-tag"></span></div>
+      </div>
+
+      <div id="actions" style="margin-top:20px">
+        <button class="btn secondary danger" id="cancel-btn">Cancel this booking</button>
+        <p class="msg" id="msg" role="alert"></p>
+      </div>
+    </div>
+
+    <p class="footer-note">Booking page powered by Book·it</p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const fmtDay = (d) => d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" });
+    const fmtTime = (d) => d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const token = new URLSearchParams(location.search).get("t");
+
+    function tagFor(status) {
+      if (status === "cancelled") return { text: "Cancelled", cls: "" };
+      if (status === "confirmed") return { text: "Confirmed", cls: "confirmed" };
+      return { text: "Waiting for confirmation", cls: "pending" };
+    }
+
+    async function load() {
+      if (!token) {
+        $("title").textContent = "Booking not found";
+        return;
+      }
+      const { data, error } = await db.rpc("get_booking_by_token", { p_token: token });
+      const row = data && data[0];
+      if (error || !row) {
+        $("title").textContent = "Booking not found";
+        return;
+      }
+
+      $("title").textContent = row.business_name;
+      $("biz").textContent = row.business_name;
+      $("service").textContent = row.service_name;
+      $("when").textContent = `${fmtDay(new Date(row.start_time))}, ${fmtTime(new Date(row.start_time))}`;
+      const t = tagFor(row.status);
+      $("status-tag").textContent = t.text;
+      $("status-tag").className = "tag " + t.cls;
+
+      const isPast = new Date(row.start_time) <= new Date();
+      if (row.status === "cancelled" || isPast) $("actions").hidden = true;
+
+      $("content").hidden = false;
+    }
+
+    $("cancel-btn").addEventListener("click", async () => {
+      if (!confirm("Cancel this booking? This can't be undone.")) return;
+      $("cancel-btn").disabled = true;
+      const { data: ok, error } = await db.rpc("cancel_booking_by_token", { p_token: token });
+      if (error || !ok) {
+        $("msg").textContent = "Couldn't cancel this booking. It may already be cancelled or in the past.";
+        $("cancel-btn").disabled = false;
+        return;
+      }
+      $("status-tag").textContent = "Cancelled";
+      $("status-tag").className = "tag";
+      $("actions").hidden = true;
+    });
+
+    load();
+  </script>
+</body>
+</html>

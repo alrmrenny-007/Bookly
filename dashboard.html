@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>try{var t=localStorage.getItem("bookit-theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f4f3ee" />
@@ -31,10 +32,20 @@
       <button class="btn secondary" id="copy">Copy link</button>
     </div>
 
+    <div class="qr-card">
+      <canvas id="qr" width="160" height="160"></canvas>
+      <div>
+        <b>Print this for your shop</b>
+        <p class="sub" style="margin:2px 0 10px">A QR code straight to your booking page, ready for a window sticker or flyer.</p>
+        <button class="btn secondary" id="qr-download">Download QR code</button>
+      </div>
+    </div>
+
     <!-- BOOKINGS -->
     <section class="panel">
       <h2>Upcoming bookings <span class="live-dot" id="live-dot" title="Live updates on"></span></h2>
       <p class="sub" id="b-sub">New bookings show up here. Confirm them or cancel to free the time.</p>
+      <button class="btn secondary" id="send-reminders" style="margin-bottom:14px">Send tomorrow's reminders</button>
       <div id="bookings"><div class="skel skel-block"></div><div class="skel skel-block"></div></div>
       <p class="msg" id="b-msg" role="alert"></p>
     </section>
@@ -71,6 +82,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="config.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
@@ -80,6 +93,7 @@
       { n: 0, name: "Sunday" },
     ];
     let vendorId = null;
+    let businessName = "";
 
     function flash(el, text, ok = false) {
       el.textContent = text;
@@ -90,12 +104,21 @@
     const fmtDay = (d) => d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" });
     const fmtTime = (d) => d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
-    async function setStatus(id, status) {
-      const { error } = await db.from("bookings").update({ status }).eq("id", id);
+    async function setStatus(b, status) {
+      const { error } = await db.from("bookings").update({ status }).eq("id", b.id);
       if (error) return flash($("b-msg"), "Couldn't update this booking. Try again.");
       flash($("b-msg"), "");
       loadBookings();
       loadStats();
+
+      if (status === "confirmed") {
+        sendEmail(
+          b.customer_email,
+          b.customer_name,
+          `Booking confirmed – ${businessName}`,
+          `Hi ${b.customer_name}, your ${b.services ? b.services.name : "appointment"} at ${businessName} on ${fmtDay(new Date(b.start_time))} at ${fmtTime(new Date(b.start_time))} is confirmed. See you then!`
+        );
+      }
     }
 
     async function loadBookings() {
@@ -157,13 +180,13 @@
         if (b.status === "pending") {
           const ok = document.createElement("button");
           ok.className = "btn secondary"; ok.textContent = "Confirm";
-          ok.onclick = () => setStatus(b.id, "confirmed");
+          ok.onclick = () => setStatus(b, "confirmed");
           actions.append(ok);
         }
         const no = document.createElement("button");
         no.className = "btn secondary danger"; no.textContent = "Cancel";
         no.onclick = () => {
-          if (confirm(`Cancel ${b.customer_name}'s booking? This frees the time for other customers.`)) setStatus(b.id, "cancelled");
+          if (confirm(`Cancel ${b.customer_name}'s booking? This frees the time for other customers.`)) setStatus(b, "cancelled");
         };
         actions.append(no);
 
@@ -293,6 +316,7 @@
         return;
       }
       vendorId = vendor.id;
+      businessName = vendor.business_name;
       $("title").textContent = vendor.business_name;
 
       const base = location.origin + location.pathname.replace(/[^/]*$/, "");
@@ -304,13 +328,75 @@
         setTimeout(() => (e.target.textContent = "Copy link"), 1500);
       };
 
+      new QRious({ element: $("qr"), value: url, size: 160, foreground: "#14161f", background: "#ffffff" });
+      $("qr-download").onclick = () => {
+        const a = document.createElement("a");
+        a.href = $("qr").toDataURL("image/png");
+        a.download = `${vendor.slug}-qr-code.png`;
+        a.click();
+      };
+
       loadBookings();
       loadStats();
       loadServices();
       loadHours();
       setInterval(loadBookings, 30000);
       goLive();
+      requestNotifyPermission();
     })();
+
+    /* ---------- Send tomorrow's reminder emails ---------- */
+    $("send-reminders").onclick = async () => {
+      const btn = $("send-reminders");
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = "Sending…";
+
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
+
+      const { data, error } = await db.from("bookings")
+        .select("customer_name, customer_email, start_time, services(name)")
+        .eq("vendor_id", vendorId)
+        .eq("status", "confirmed")
+        .gte("start_time", start.toISOString())
+        .lt("start_time", end.toISOString());
+
+      if (error) { btn.disabled = false; btn.textContent = original; return flash($("b-msg"), "Couldn't load tomorrow's bookings."); }
+
+      const withEmail = (data || []).filter((b) => b.customer_email);
+      for (const b of withEmail) {
+        await sendEmail(
+          b.customer_email,
+          b.customer_name,
+          `Reminder: your appointment tomorrow – ${businessName}`,
+          `Hi ${b.customer_name}, just a reminder that your ${b.services ? b.services.name : "appointment"} at ${businessName} is tomorrow at ${fmtTime(new Date(b.start_time))}.`
+        );
+      }
+
+      btn.disabled = false;
+      btn.textContent = original;
+      flash($("b-msg"), withEmail.length
+        ? `Sent ${withEmail.length} reminder${withEmail.length === 1 ? "" : "s"}.`
+        : "No confirmed bookings with an email for tomorrow.", true);
+    };
+
+    /* ---------- Desktop notification banner for the owner ---------- */
+    function requestNotifyPermission() {
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    }
+    function notifyOwner(booking) {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+      try {
+        new Notification(`New booking – ${businessName}`, {
+          body: `${booking.customer_name} booked for ${fmtTime(new Date(booking.start_time))}`,
+          icon: "favicon.svg",
+        });
+      } catch (_) { /* unsupported in this browser, silently skip */ }
+    }
 
     /* ---------- This week's stats ---------- */
     function weekRange() {
@@ -368,6 +454,7 @@
           (payload) => {
             showToast(`New booking from ${payload.new.customer_name}`);
             playChime();
+            notifyOwner(payload.new);
             loadBookings();
             loadStats();
           }

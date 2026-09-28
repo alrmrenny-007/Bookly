@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>try{var t=localStorage.getItem("bookit-theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f4f3ee" />
@@ -40,6 +41,8 @@
           <input id="name" autocomplete="name" placeholder="Alex" />
           <label for="phone">Phone number</label>
           <input id="phone" type="tel" autocomplete="tel" placeholder="So the business can reach you" />
+          <label for="email">Email <span style="font-weight:400;color:var(--muted)">(optional, for confirmation and reminders)</span></label>
+          <input id="email" type="email" autocomplete="email" placeholder="you@example.com" />
           <button class="btn" id="submit" type="submit">Book this time</button>
           <p class="msg" id="msg" role="alert"></p>
         </form>
@@ -53,13 +56,15 @@
         <div class="bottom"><b id="d-when"></b><span class="tag">Waiting for confirmation</span></div>
       </div>
       <p class="about" style="margin-top:16px">Thanks! <span id="d-name"></span>, the business will confirm your booking soon. Take a screenshot of this ticket to keep the details.</p>
-      <button class="btn secondary" style="margin-top:16px" onclick="location.reload()">Make another booking</button>
+      <a class="btn-a" id="manage-link" style="display:inline-block;margin-top:14px" href="#">Manage or cancel this booking</a>
+      <button class="btn secondary" style="margin-top:12px;display:block" onclick="location.reload()">Make another booking</button>
     </div>
 
     <p class="footer-note">Booking page powered by Book·it</p>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="config.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
@@ -201,20 +206,25 @@
       e.preventDefault();
       const name = $("name").value.trim();
       const phone = $("phone").value.trim();
+      const email = $("email").value.trim();
       const msg = $("msg"); msg.textContent = "";
       if (!name) return (msg.textContent = "Enter your name.");
       if (phone.replace(/\D/g, "").length < 6) return (msg.textContent = "Enter a phone number the business can reach.");
+      if (email && !/^\S+@\S+\.\S+$/.test(email)) return (msg.textContent = "That email doesn't look right. Leave it blank to skip.");
       if (!chosen.slot) return (msg.textContent = "Pick a time first.");
 
       $("submit").disabled = true;
+      const cancelToken = crypto.randomUUID();
       // No .select() here: customers can insert bookings but not read them back.
       const { error } = await db.from("bookings").insert({
         vendor_id: vendor.id,
         service_id: chosen.service.id,
         customer_name: name,
         customer_phone: phone,
+        customer_email: email || null,
         start_time: chosen.slot.start.toISOString(),
         end_time: chosen.slot.end.toISOString(),
+        cancel_token: cancelToken,
       });
       $("submit").disabled = false;
 
@@ -232,10 +242,18 @@
       $("d-service").textContent = chosen.service.name;
       $("d-when").textContent = `${fmtDay(chosen.slot.start)}, ${fmtTime(chosen.slot.start)}`;
       $("d-name").textContent = name;
+      $("manage-link").href = `manage.html?t=${cancelToken}`;
       $("flow").hidden = true;
       $("done").hidden = false;
       window.scrollTo({ top: 0, behavior: "smooth" });
       confettiBurst();
+
+      sendEmail(
+        email,
+        name,
+        `Booking received – ${vendor.business_name}`,
+        `Hi ${name}, your booking for ${chosen.service.name} at ${vendor.business_name} on ${fmtDay(chosen.slot.start)} at ${fmtTime(chosen.slot.start)} has been received and is waiting for confirmation. You'll get another email once it's confirmed.`
+      );
     });
 
     // A quick, unapologetically fun confetti burst for a booking well made

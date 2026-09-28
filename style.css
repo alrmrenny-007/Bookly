@@ -1,5 +1,6 @@
 :root {
   --paper: #f4f3ee;
+  --surface: #ffffff;
   --ink: #14161f;
   --muted: #5b6070;
   --line: #d9d8cf;
@@ -8,6 +9,27 @@
   --butter: #ffd95a;
   --error: #b3261e;
   --radius: 14px;
+}
+
+[data-theme="dark"] {
+  --paper: #12141c;
+  --surface: #1b1e29;
+  --ink: #f2f1ea;
+  --muted: #9a9fb2;
+  --line: #33374a;
+  --cobalt: #7c89ff;
+  --cobalt-dark: #97a2ff;
+  --butter: #ffd95a;
+  --error: #ff7a70;
+}
+
+[data-theme="dark"] .plan.pro { box-shadow: 8px 8px 0 rgba(255, 217, 90, .35); }
+[data-theme="dark"] img, [data-theme="dark"] svg.brand-mark { filter: none; }
+
+html { transition: background-color .25s ease; }
+body { transition: background-color .25s ease, color .25s ease; }
+.card, .item, .choice, .stat, .ticket, .plan, .day, .linkbox, .qr-card {
+  transition: background-color .25s ease, border-color .25s ease;
 }
 
 * { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
@@ -74,7 +96,7 @@ h1, h2, h3, .wordmark {
 .slip {
   margin-top: 32px;
   max-width: 340px;
-  background: #fff;
+  background: var(--surface);
   border: 2px solid var(--ink);
   border-radius: var(--radius);
   transform: rotate(-2deg);
@@ -91,7 +113,7 @@ h1, h2, h3, .wordmark {
 @media (max-width: 859px) { .slip { display: none; } }
 
 .card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 24px;
@@ -109,12 +131,12 @@ h1, h2, h3, .wordmark {
   border: 0; background: transparent; padding: 10px; border-radius: 8px;
   font: inherit; font-weight: 600; color: var(--muted); cursor: pointer;
 }
-.tabs button[aria-selected="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 
 label { display: block; font-weight: 600; font-size: .92rem; margin: 14px 0 6px; }
 input {
   width: 100%; padding: 12px 14px; font: inherit;
-  border: 1.5px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink);
+  border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink);
 }
 input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px rgba(43,63,214,.18); }
 .hint { font-size: .85rem; color: var(--muted); margin-top: 6px; word-break: break-all; }
@@ -148,7 +170,7 @@ input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px 
 .dash h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); font-weight: 800; }
 .linkbox {
   margin-top: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
-  background: #fff; border: 1.5px dashed var(--ink); border-radius: var(--radius); padding: 14px 16px;
+  background: var(--surface); border: 1.5px dashed var(--ink); border-radius: var(--radius); padding: 14px 16px;
 }
 .linkbox code { flex: 1; min-width: 200px; word-break: break-all; font-size: .95rem; }
 .empty { margin-top: 24px; color: var(--muted); }
@@ -163,7 +185,7 @@ input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px 
 .list { display: grid; gap: 10px; margin-bottom: 16px; }
 .item {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
 }
 .item b { display: block; }
 .item small { color: var(--muted); }
@@ -177,7 +199,7 @@ input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px 
 .hours { display: grid; gap: 8px; }
 .day {
   display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px;
-  background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
 }
 .day label { margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 600; }
 .day input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--cobalt); flex-shrink: 0; }
@@ -198,7 +220,7 @@ input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px 
 .choices { display: grid; gap: 10px; }
 .choice {
   text-align: left; font: inherit; cursor: pointer; width: 100%;
-  background: #fff; border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px;
   display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--ink);
 }
 .choice small { color: var(--muted); display: block; }
@@ -217,7 +239,7 @@ input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px 
 .times .choice { justify-content: center; padding: 10px 0; font-weight: 600; }
 
 .ticket {
-  margin-top: 24px; background: #fff; border: 2px solid var(--ink); border-radius: var(--radius);
+  margin-top: 24px; background: var(--surface); border: 2px solid var(--ink); border-radius: var(--radius);
   box-shadow: 6px 6px 0 var(--butter);
 }
 .ticket .top { padding: 18px; }
@@ -286,7 +308,7 @@ input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px 
 
 .plans { margin-top: 28px; display: grid; gap: 18px; }
 @media (min-width: 720px) { .plans { grid-template-columns: 1fr 1fr; align-items: stretch; } }
-.plan { border-radius: var(--radius); padding: 26px; border: 1.5px solid var(--ink); background: #fff; display: flex; flex-direction: column; }
+.plan { border-radius: var(--radius); padding: 26px; border: 1.5px solid var(--ink); background: var(--surface); display: flex; flex-direction: column; }
 .plan h3 { font-size: 1.3rem; font-weight: 800; }
 .plan .price { font-family: "Bricolage Grotesque", sans-serif; font-size: 3rem; font-weight: 800; line-height: 1.1; margin: 8px 0; }
 .plan .price small { font-size: 1rem; font-weight: 500; font-family: "DM Sans", sans-serif; opacity: .7; }
@@ -386,7 +408,7 @@ a.wordmark:hover, .wordmark:hover { animation: wmHop .5s ease; }
 
 /* ---------- Stats ---------- */
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
-.stat { background: #fff; border: 1.5px solid var(--ink); border-radius: var(--radius); padding: 16px 18px; }
+.stat { background: var(--surface); border: 1.5px solid var(--ink); border-radius: var(--radius); padding: 16px 18px; }
 .stat-num { display: block; font-family: "Bricolage Grotesque", sans-serif; font-size: 1.9rem; font-weight: 800; }
 .stat-label { color: var(--muted); font-size: .88rem; }
 
@@ -410,3 +432,28 @@ a.wordmark:hover, .wordmark:hover { animation: wmHop .5s ease; }
 @keyframes toastIn { from { opacity: 0; transform: translateY(-16px) scale(.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes toastOut { to { opacity: 0; transform: translateY(-10px); } }
 @media (prefers-reduced-motion: reduce) { .toast, .live-dot.on { animation: none !important; } }
+
+/* ---------- QR card ---------- */
+.qr-card {
+  margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+}
+.qr-card canvas { border-radius: 8px; border: 1px solid var(--line); flex-shrink: 0; }
+.qr-card > div { flex: 1; min-width: 180px; }
+
+/* ---------- Theme toggle ---------- */
+.theme-btn {
+  width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--line);
+  background: var(--surface); color: var(--ink); display: grid; place-items: center;
+  cursor: pointer; flex-shrink: 0; position: relative; overflow: hidden;
+}
+.theme-btn svg { width: 20px; height: 20px; transition: transform .4s cubic-bezier(.2,.8,.2,1.2), opacity .3s ease; }
+.theme-btn .sun { position: absolute; }
+.theme-btn .moon { position: absolute; }
+[data-theme="dark"] .theme-btn .sun { opacity: 0; transform: rotate(90deg) scale(.4); }
+[data-theme="dark"] .theme-btn .moon { opacity: 1; transform: rotate(0) scale(1); }
+:root:not([data-theme="dark"]) .theme-btn .sun { opacity: 1; transform: rotate(0) scale(1); }
+:root:not([data-theme="dark"]) .theme-btn .moon { opacity: 0; transform: rotate(-90deg) scale(.4); }
+.theme-btn:active { transform: scale(.9); }
+
+.theme-fixed { position: fixed; top: 14px; right: 14px; z-index: 200; }
