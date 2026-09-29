@@ -10,14 +10,25 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="splash" class="splash" aria-hidden="true">
+    <div class="splash-ring"></div>
+    <span class="splash-word">Book<span class="dot">·</span>it</span>
+  </div>
   <div id="toasts" aria-live="polite"></div>
   <div class="shell dash">
     <div class="topbar">
       <div class="wordmark">Book<span>·it</span></div>
-      <button class="btn secondary" id="logout">Log out</button>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span id="theme-slot"></span>
+        <button class="btn secondary" id="logout">Log out</button>
+      </div>
     </div>
 
     <h1 id="title"><span class="skel skel-line" style="width:220px;display:inline-block"></span></h1>
@@ -85,6 +96,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="config.js"></script>
+  <script src="theme.js"></script>
+  <script>mountThemeToggle(document.getElementById("theme-slot"));</script>
+  <script src="pwa.js"></script>
+  <script>playInstalledLaunchAnimation();</script>
   <script>
     const $ = (id) => document.getElementById(id);
     const DAYS = [

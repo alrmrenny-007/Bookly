@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>try{var t=localStorage.getItem("bookit-theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f4f3ee" />
@@ -9,11 +10,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="shell">
-    <header><a class="wordmark" href="index.html" style="text-decoration:none;color:inherit">Book<span>·it</span></a></header>
+    <header><a class="wordmark" href="index.html" style="text-decoration:none;color:inherit">Book<span>·it</span></a><span id="theme-slot"></span></header>
 
     <main class="split">
       <section class="intro">
@@ -64,6 +69,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
+  <script src="theme.js"></script>
+  <script>mountThemeToggle(document.getElementById("theme-slot"));</script>
+  <script src="pwa.js"></script>
   <script>
     let mode = "signup";
     let slugEdited = false;

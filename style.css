@@ -75,7 +75,7 @@ h1, h2, h3, .wordmark {
   padding: 20px 20px 48px;
 }
 
-.shell > header { padding: 8px 0 24px; }
+.shell > header { padding: 8px 0 24px; display: flex; justify-content: space-between; align-items: center; }
 
 .split { display: grid; gap: 32px; }
 
@@ -457,3 +457,79 @@ a.wordmark:hover, .wordmark:hover { animation: wmHop .5s ease; }
 .theme-btn:active { transform: scale(.9); }
 
 .theme-fixed { position: fixed; top: 14px; right: 14px; z-index: 200; }
+
+/* ---------- PWA install button ---------- */
+.install-btn {
+  position: relative; overflow: visible;
+  animation: installGlow 2.2s ease-in-out infinite;
+}
+@keyframes installGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(43,63,214,.45); }
+  50% { box-shadow: 0 0 0 10px rgba(43,63,214,0); }
+}
+[data-theme="dark"] .install-btn { animation-name: installGlowDark; }
+@keyframes installGlowDark {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124,137,255,.55); }
+  50% { box-shadow: 0 0 0 10px rgba(124,137,255,0); }
+}
+
+.ios-install-tip {
+  margin-top: 14px; background: var(--surface); border: 1.5px dashed var(--ink);
+  border-radius: 12px; padding: 12px 16px; font-size: .92rem; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.ios-install-tip b { color: var(--ink); }
+
+/* ---------- Installed-app boot animation ---------- */
+.splash {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--cobalt);
+  align-items: center; justify-content: center;
+  clip-path: circle(150% at 50% 50%);
+}
+html.is-installed-launch .splash {
+  display: flex;
+  animation: splashIris 1.6s cubic-bezier(.5,0,.2,1) forwards;
+}
+@keyframes splashIris {
+  0%, 52% { clip-path: circle(150% at 50% 50%); }
+  100% { clip-path: circle(0% at 50% 50%); }
+}
+
+.splash-ring {
+  position: absolute; width: 40px; height: 40px; border-radius: 50%;
+  border: 3px solid var(--butter); opacity: 0;
+}
+html.is-installed-launch .splash-ring {
+  animation: ringPulse 0.9s ease-out 0.35s;
+}
+@keyframes ringPulse {
+  0% { transform: scale(1); opacity: .9; }
+  100% { transform: scale(9); opacity: 0; }
+}
+
+.splash-word {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 800; font-size: 2.4rem; color: #fff;
+  display: inline-block; transform: scale(0);
+}
+html.is-installed-launch .splash-word {
+  animation: wordPop 0.55s cubic-bezier(.2,1.4,.4,1) 0.1s forwards;
+}
+@keyframes wordPop {
+  0% { transform: scale(0) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.splash-word .dot { color: var(--butter); display: inline-block; }
+html.is-installed-launch .splash-word .dot {
+  animation: dotSpin 0.6s ease-out 0.45s;
+}
+@keyframes dotSpin {
+  0% { transform: scale(0.6) rotate(0); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.is-installed-launch .splash { animation: none; display: none; }
+}
