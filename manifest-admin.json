@@ -1,0 +1,16 @@
+{
+  "name": "Book\u00b7it for Business",
+  "short_name": "Book\u00b7it Biz",
+  "description": "Manage your services, hours, and bookings.",
+  "start_url": "./login.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#12141c",
+  "theme_color": "#14161f",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icon-192-admin.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-admin.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-admin-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

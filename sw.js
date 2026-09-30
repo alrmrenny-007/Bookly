@@ -1,7 +1,7 @@
 // Minimal app-shell cache so the site qualifies as an installable PWA
 // and loads instantly on repeat visits. Booking data always comes
 // fresh from Supabase; this only caches the static shell.
-const CACHE = "bookit-shell-v1";
+const CACHE = "bookit-shell-v2";
 const SHELL = [
   "./index.html",
   "./login.html",
@@ -11,9 +11,15 @@ const SHELL = [
   "./style.css",
   "./config.js",
   "./theme.js",
+  "./pwa.js",
   "./favicon.svg",
+  "./manifest.json",
+  "./manifest-admin.json",
   "./icon-192.png",
   "./icon-512.png",
+  "./icon-512-maskable.png",
+  "./icon-192-admin.png",
+  "./icon-512-admin.png",
 ];
 
 self.addEventListener("install", (event) => {

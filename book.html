@@ -10,17 +10,28 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" href="manifest.json" id="dyn-manifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="splash" class="splash" aria-hidden="true">
+    <div class="splash-ring"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <span class="splash-word" id="splash-word">Book<span class="dot">·</span>it</span>
+      <small id="splash-sub" class="splash-sub" hidden>Powered by Book·it</small>
+    </div>
+  </div>
   <span id="theme-slot" class="theme-fixed"></span>
   <main class="book">
     <h1 id="title"><span class="skel skel-line" style="width:70%;height:1.6em;display:inline-block"></span></h1>
     <p class="about" id="about"></p>
+    <button class="btn-a install-btn" id="install-btn" hidden style="margin:10px 0">📲 Install this app</button>
+    <p class="ios-install-tip" id="ios-tip" hidden>
+      <span>On iPhone: tap <b>Share</b> then <b>Add to Home Screen</b> to book faster next time.</span>
+    </p>
 
     <div id="flow" hidden>
       <section class="step">
@@ -104,6 +115,7 @@
       document.title = `Book ${v.business_name}`;
       $("title").textContent = v.business_name;
       $("about").textContent = v.description || "";
+      personalizeApp(v, slug);
 
       const [s, a] = await Promise.all([
         db.from("services").select("*").eq("vendor_id", v.id).order("created_at"),
@@ -117,6 +129,34 @@
       }
       renderServices();
       $("flow").hidden = false;
+    }
+
+    // Gives this vendor's customers their own personalized mini-app:
+    // a custom app name/icon on install, and their name on the boot splash.
+    function personalizeApp(v, slug) {
+      $("splash-word").textContent = v.business_name;
+      $("splash-sub").hidden = false;
+      playInstalledLaunchAnimation();
+
+      const manifest = {
+        name: `${v.business_name} — book an appointment`,
+        short_name: v.business_name.slice(0, 12),
+        start_url: `./book.html?v=${slug}`,
+        scope: "./book.html",
+        display: "standalone",
+        background_color: "#f4f3ee",
+        theme_color: "#2b3fd6",
+        icons: [
+          { src: "icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "icon-512.png", sizes: "512x512", type: "image/png" },
+          { src: "icon-512-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
+      };
+      const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
+      document.getElementById("dyn-manifest").href = URL.createObjectURL(blob);
+
+      $("install-btn").textContent = `📲 Install ${v.business_name}`;
+      mountInstallPrompt();
     }
 
     function fail(text) {

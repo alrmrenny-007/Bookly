@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="manifest" href="manifest-admin.json" />
+  <link rel="apple-touch-icon" href="icon-192-admin.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="style.css" />
@@ -42,6 +42,11 @@
       <code id="link"></code>
       <button class="btn secondary" id="copy">Copy link</button>
     </div>
+
+    <button class="btn-a install-btn" id="install-btn" hidden style="margin:14px 0">📲 Install the business app</button>
+    <p class="ios-install-tip" id="ios-tip" hidden>
+      <span>On iPhone: tap <b>Share</b> then <b>Add to Home Screen</b> for one-tap access to your dashboard.</span>
+    </p>
 
     <div class="qr-card">
       <canvas id="qr" width="160" height="160"></canvas>
@@ -99,7 +104,7 @@
   <script src="theme.js"></script>
   <script>mountThemeToggle(document.getElementById("theme-slot"));</script>
   <script src="pwa.js"></script>
-  <script>playInstalledLaunchAnimation();</script>
+  <script>mountInstallPrompt(); playInstalledLaunchAnimation();</script>
   <script>
     const $ = (id) => document.getElementById(id);
     const DAYS = [
